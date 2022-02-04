@@ -1,0 +1,51 @@
+name: Deployment pipeline
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize]
+
+jobs:
+  simple_deployment_pipeline:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+      - name: yarn install
+        run: yarn install
+      - name: lint
+        run: yarn run eslint
+      - name: build
+        run: yarn run build
+      - name: open server
+        run: yarn run server
+      - name: e2e tests
+        uses: cypress-io/github-action@v2
+        with:
+          command: yarn run test:e2e
+          start: yarn run start-prod
+          wait-on: http://localhost:5000
+          browser: chrome
+      - name: deploy-to-heroku
+        if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message),'#skip')}}
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: evening-chamber-61494
+          heroku_email: maitran.ln99@gmail.com
+          healthcheck: https://evening-chamber-61494.herokuapp.com/health
+          checkstring: "ok"
+          rollbackonhealthcheckfailed: true
+      - uses: actions/checkout@v2
+      - name: Bump version and push tag
+        if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message),'#skip')}}
+        uses: anothrNick/github-tag-action@eca2b69f9e2c24be7decccd0f15fdb1ea5906598
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+          WITH_V: true

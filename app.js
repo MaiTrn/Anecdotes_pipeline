@@ -33,11 +33,12 @@ let data = JSON.parse(rawData);
 const router = jsonServer.router(data);
 
 app.use(middlewares);
-app.use(router);
 
 app.get("/health", (req, res) => {
   res.send("ok");
 });
+
+app.use(router);
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

@@ -16,8 +16,8 @@
 //   console.log("server started on port 5000");
 // });
 
-const jsonServer = requier("json-server");
-const server = jsonServer.create();
+const jsonServer = require("json-server");
+const app = jsonServer.create();
 const middlewares = jsonServer.defaults({
   static: "./build",
 });
@@ -32,8 +32,8 @@ let data = JSON.parse(rawData);
 
 const router = jsonServer.router(data);
 
-server.use(middlewares);
-server.use(router);
+app.use(middlewares);
+app.use(router);
 
 app.get("/health", (req, res) => {
   res.send("ok");
